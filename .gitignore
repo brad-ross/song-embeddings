@@ -1,2 +1,3 @@
 # node files
 **/node_modules/**
+**/config.json

@@ -4,7 +4,9 @@
   "description": "A scraper for Spotify song previews",
   "main": "app.js",
   "dependencies": {
-    "express": "^4.15.3"
+    "express": "^4.15.3",
+    "node-fetch": "^1.7.1",
+    "url-search-params": "^0.9.0"
   },
   "scripts": {
     "start": "node app.js"
