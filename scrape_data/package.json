@@ -1,0 +1,12 @@
+{
+  "name": "scrape_data",
+  "version": "1.0.0",
+  "description": "A scraper for Spotify song previews",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.15.3"
+  },
+  "scripts": {
+    "start": "node app.js"
+  }
+}
