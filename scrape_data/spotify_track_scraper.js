@@ -3,10 +3,12 @@ const getConfig = require('./config')
 const {spotifyRequest, makeRateLimitedRequests} = require('./spotify_client')
 const {Track, Artist} = require('./models')
 
+const SPOTIFY_BASE_URL = 'https://api.spotify.com/v1'
 const NUM_CATEGORIES = 50
 const CATS_TO_EXCLUDE = new Set(getConfig().scraping.categories_to_exclude)
 const REQUEST_DELAY = 500
 const PRINT_MULTIPLE = 100
+const DEFAULT_COUNTRY = 'US'
 
 function scrapePublicPlaylistsForArtists() {
   return getPlaylistTrackUrlsFromAllCategs()
@@ -21,7 +23,7 @@ function scrapePublicPlaylistsForArtists() {
 
 function getPlaylistTrackUrlsFromAllCategs() {
   const options = {qs: {limit: NUM_CATEGORIES}}
-  return spotifyRequest('https://api.spotify.com/v1/browse/categories', options)
+  return spotifyRequest(SPOTIFY_BASE_URL + '/browse/categories', options)
     .then(res => res.categories.items.filter(category => !CATS_TO_EXCLUDE.has(category.name)))
     .then(categories => categories.map(category => category.href + '/playlists'))
     .then(categoryUrls => Promise.all(categoryUrls.map(url => spotifyRequest(url))))
@@ -103,6 +105,40 @@ function saveArtists(artists) {
   return Artist.insertMany(artists)
 }
 
+function scrapeTopTracksFromArtists(artists) {
+  return makeRateLimitedRequests(artists,
+    (artist, i, resolve, reject) => getTopTracksForArtist(artist)
+      .then(tracks => {
+        if (i % PRINT_MULTIPLE == 0)
+          console.log(`${i} out of ${artists.length} artists scraped for top tracks`)
+        resolve(tracks)
+      })
+      .catch(err => reject(err)),
+  REQUEST_DELAY)
+    .then(trackSets => _.uniqBy(_.flatten(trackSets), '_id'))
+    .then(tracks => Promise.all([saveTracks(tracks), updateArtists(artists)]))
+}
+
+function getTopTracksForArtist(artist) {
+  return spotifyRequest(SPOTIFY_BASE_URL + '/artists/' + artist._id + '/top-tracks', 
+                        {qs: {country: DEFAULT_COUNTRY}})
+    .then(res => res.tracks.map(
+      track => {
+        artist.tracks.push(track.id)
+        return Track.createFromSpotify(track)
+      }
+    ))
+}
+
+function saveTracks(tracks) {
+  return Track.insertMany(tracks)
+}
+
+function updateArtists(artists) {
+  return Artist.updateMany(artists, {new: true})
+}
+
 module.exports = {
-  scrapePublicPlaylistsForArtists
+  scrapePublicPlaylistsForArtists,
+  scrapeTopTracksFromArtists
 }
