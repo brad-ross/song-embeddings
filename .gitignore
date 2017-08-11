@@ -1,5 +1,9 @@
 **/.DS_Store
 
+# python files
+**/.env/*
+**/*.pyc
+
 # node files
 **/node_modules/**
 **/config.json
