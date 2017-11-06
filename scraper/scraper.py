@@ -168,9 +168,12 @@ def save_raw_preview(track):
 class Scraper(object):
     def __init__(self):
         self.__client = Client()
+        log('Spotify client set up')
         self.__db = get_session()
+        log('Database session set up')
         self.__counter = Value('i', 0)
         self.__pool = Pool(processes=4, initializer=init_process, initargs=(self.__counter,))
+        log('Process pool set up')
 
     def __parallel_map(self, fn, data):
         results = self.__pool.map(fn, data)
