@@ -7,6 +7,9 @@ from time import sleep
 from utils import log
 import traceback
 
+import requests.packages.urllib3
+requests.packages.urllib3.disable_warnings()
+
 MAX_RETRIES = 5
 RETRY_DELAY = 5
 
