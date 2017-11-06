@@ -1,5 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, String, ForeignKey, Table
+from sqlalchemy import Column, String, Boolean, ForeignKey, Table
 from sqlalchemy.orm import relationship
 
 Base = declarative_base()
@@ -21,6 +21,7 @@ class Track(Base):
     name = Column(String)
     preview_url = Column(String)
     album_id = Column(String, ForeignKey('albums.id'))
+    is_top_track = Column(Boolean, default=False)
 
     artists = relationship('Artist', secondary=track_artists, back_populates='tracks')
     album = relationship('Album', back_populates='tracks')

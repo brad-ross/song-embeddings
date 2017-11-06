@@ -1,10 +1,13 @@
 from config import get_config
 import requests
 from base64 import b64encode
+from pydub import AudioSegment
+import numpy as np
 from time import sleep
 from utils import log
+import traceback
 
-MAX_RETRIES = 3
+MAX_RETRIES = 5
 RETRY_DELAY = 5
 
 class Client(object):
@@ -34,17 +37,46 @@ class Client(object):
             sleep(delay)
 
         for retry_num in range(MAX_RETRIES):
-            res = requests.get(url,
-                               params=params,
-                               headers={'Authorization': 'Bearer {0}'.format(self.__access_token)})
+            try:
+                res = requests.get(url,
+                                   params=params,
+                                   headers={
+                                    'Authorization': 'Bearer {0}'.format(self.__access_token)
+                                   })
+
+                if res.status_code == requests.codes.unauthorized:
+                    self.__refresh_access_token()
+                elif res.status_code == requests.codes.ok:
+                    return res.json()
+                else:
+                    res_text = res if isinstance(res, str) else res.text
+                    # TODO: use python logger
+                    log('SPOTIFY ERROR: {0} {1} {2}'.format(url, params, res_text))
+
+            except Exception as e:
+                log('REQUEST ERROR: {0} {1} \n {2}'.format(url, params, traceback.format_exc()))
             
-            if res.status_code == requests.codes.unauthorized:
-                self.__refresh_access_token()
-            elif res.status_code == requests.codes.ok:
-                return res.json()
-            else:
-                res_text = res.json() if 'json' in dir(res) else res
-                # TODO: use python logger
-                log('SPOTIFY ERROR: {0} {1} {2}'.format(url, params, res_text))
-            
+            sleep(RETRY_DELAY)
+
+        log('MAX RETRIES EXCEEDED FOR: {0} {1}'.format(url, params))
+
+    def get_raw_preview(self, preview_url, delay=0):
+        if delay > 0:
+            sleep(delay)
+
+        for retry_num in range(MAX_RETRIES):
+            try:
+                res = requests.get(preview_url, stream=True)
+
+                if res.status_code == requests.codes.unauthorized:
+                    self.__refresh_access_token()
+                elif res.status_code == requests.codes.ok:
+                    return res.raw
+                else:
+                    res_text = res if isinstance(res, str) else res.text
+                    # TODO: use python logger
+                    log('SPOTIFY ERROR: {0} {1}'.format(url, params, res_text))
+            except Exception as e:
+                log('REQUEST ERROR: {0} \n {1}'.format(preview_url, traceback.format_exc()))
+
             sleep(RETRY_DELAY)
