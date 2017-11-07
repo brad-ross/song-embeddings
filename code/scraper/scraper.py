@@ -1,9 +1,9 @@
-from config import get_config
-from utils import log
-from spotify import Client
-from db import get_session
+from ..config import get_config
+from .utils import log
+from .spotify import Client
+from .db import get_session
 from multiprocessing import Pool, Value
-from models import Track, Playlist, Album, Artist, Genre
+from ..data.models import Track, Playlist, Album, Artist, Genre
 import shutil
 
 config = get_config()

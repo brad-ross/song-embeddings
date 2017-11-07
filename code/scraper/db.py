@@ -1,7 +1,7 @@
-from config import get_config
+from ..config import get_config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from models import Base
+from ..data.models import Base
 
 config = get_config()
 
