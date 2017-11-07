@@ -4,6 +4,7 @@ import time
 buckets = ['song-embeddings-raw-previews']
 
 for bucket in buckets:
+    print('mounting {}'.format(bucket))
     bucketPath = os.path.expanduser('~/' + bucket)
     checkPath = bucketPath + '/dirEmptyCheck'
     bucketName = bucket

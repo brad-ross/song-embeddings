@@ -1,9 +1,9 @@
-from config import get_config
-from utils import log
-from spotify import Client
-from db import get_session
+from ..config import get_config
+from .utils import log
+from .spotify import Client
+from .db import get_session
 from multiprocessing import Pool, Value
-from models import Track, Playlist, Album, Artist, Genre
+from ..data.models import Track, Playlist, Album, Artist, Genre
 import shutil
 
 config = get_config()
@@ -157,7 +157,7 @@ def get_genres_from_object(object):
 
 def save_raw_preview(track):
     raw_track = client.get_raw_preview(track.preview_url, delay=rate_limit_delay)
-    with open('./test_output/{0}.mp3'.format(track.id), 'wb') as out_file:
+    with open('~/song-embeddings-raw-previews/{0}.mp3'.format(track.id), 'wb') as out_file:
         shutil.copyfileobj(raw_track, out_file)
 
     progress_counter.value += 1
