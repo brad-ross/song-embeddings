@@ -1,7 +1,7 @@
 import os
 import time
 
-buckets = ['song-embeddings-raw-previews']
+buckets = ['song-embeddings-orchestral']
 
 for bucket in buckets:
     print('mounting {}'.format(bucket))
@@ -12,5 +12,5 @@ for bucket in buckets:
         os.listdir(checkPath)
     except OSError:
         os.system('gcsfuse %s %s' % (bucketName, bucketPath))
-        os.system('touch %s' % checkPath)
+        os.system('mkdir %s' % checkPath)
     time.sleep(3)

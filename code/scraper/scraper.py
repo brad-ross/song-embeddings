@@ -4,7 +4,8 @@ from .spotify import Client
 from .db import get_session
 from multiprocessing import Pool, Value
 from ..data.models import Track, Playlist, Album, Artist, Genre
-from ..data.cloud_storage import save_raw_preview
+from ..data.cloud_storage import save_raw_preview_to_cloud
+from sqlalchemy.sql import func
 
 config = get_config()
 base_url = 'https://api.spotify.com/v1'
@@ -157,11 +158,11 @@ def get_genres_from_object(object):
 
 def save_raw_preview(track):
     raw_track = client.get_raw_preview(track.preview_url, delay=rate_limit_delay)
-    save_raw_preview(raw_track, track.id)
+    save_raw_preview_to_cloud(raw_track, track.id)
 
     progress_counter.value += 1
 
-    if progress_counter.value > 0 and progress_counter.value % 10 == 0:
+    if progress_counter.value > 0 and progress_counter.value % 1000 == 0:
         log('{0} raw previews saved'.format(progress_counter.value))
 
 class Scraper(object):
@@ -463,5 +464,8 @@ class Scraper(object):
         log('Finished fetching objects from public playlists')
 
     def download_raw_previews(self):
-        tracks_from_db = self.__db.query(Track).filter(Track.preview_url != None).limit(100)
+        tracks_from_db = self.__db.query(Track).filter(Track.preview_url != None).order_by(func.random()).limit(100000).all()
+	
+	log('{} previews to download'.format(len(tracks_from_db)))	
+
         self.__parallel_map(save_raw_preview, tracks_from_db)
