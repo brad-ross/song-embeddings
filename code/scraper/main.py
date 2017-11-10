@@ -11,4 +11,4 @@ if __name__ == '__main__':
     # scraper.build_related_artists_graph()
     # scraper.get_genres()
     
-    scraper.download_raw_previews()
+    # scraper.download_raw_previews()

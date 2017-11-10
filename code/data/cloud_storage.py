@@ -1,4 +1,4 @@
-#from .google_cloud_utils import mount_bucket
+from .google_cloud_utils import mount_bucket
 import os
 import shutil
 from time import sleep
