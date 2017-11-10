@@ -6,18 +6,15 @@ config = get_config()
 mount_location = config['storage']['mount_location']
 buckets = config['storage']['buckets_to_mount']
 
-check_folder = 'dirEmptyCheck'
+check_file = 'dirEmptyCheck'
 
 for bucket in buckets:
     print('mounting {}'.format(bucket))
     bucketPath = os.path.expanduser(os.path.join(mount_location, bucket))
-    print(bucketPath)
-    checkPath = bucketPath + '/dirEmptyCheck'
+    checkPath = os.path.join(bucketPath, check_file)
     bucketName = bucket
-    try:
-        os.listdir(checkPath)
-    except OSError:
+    if not os.path.isfile(checkPath):
         os.system('gcsfuse %s %s' % (bucketName, bucketPath))
-        if check_folder not in set(os.listdir(bucketPath)):
-            os.system('mkdir %s' % checkPath)
+        if not os.path.isfile(checkPath):
+            os.system('touch %s' % checkPath)
     time.sleep(3)
