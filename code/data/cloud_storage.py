@@ -15,7 +15,11 @@ def get_path_to_bucket(bucket_name):
 
 def open_file_in_bucket(filename, bucket):
     abs_path = get_path_to_bucket(bucket)
-    return open(os.path.join(abs_path, filename), 'r+') # should allow both reads and writes
+    return open(os.path.join(abs_path, filename), 'a+') # should allow both reads and writes
+
+def list_files_in_bucket(bucket):
+    abs_path = get_path_to_bucket(bucket)
+    return os.listdir(abs_path)
 
 def save_raw_preview_to_cloud(raw_track, track_id, bucket_name):
     for i in range(NUM_RETRIES):

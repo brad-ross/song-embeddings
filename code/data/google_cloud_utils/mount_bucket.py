@@ -17,4 +17,4 @@ for bucket in buckets:
         os.system('gcsfuse %s %s' % (bucketName, bucketPath))
         if not os.path.isfile(checkPath):
             os.system('touch %s' % checkPath)
-    time.sleep(3)
+    	time.sleep(3)
