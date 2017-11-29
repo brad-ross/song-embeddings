@@ -6,6 +6,7 @@ from multiprocessing import Pool, Value
 from ..data.models import Track, Playlist, Album, Artist, Genre
 from ..data.cloud_storage import save_raw_preview_to_cloud
 from sqlalchemy import and_
+from sqlalchemy.sql.expression import func
 
 config = get_config()
 base_url = 'https://api.spotify.com/v1'
@@ -157,13 +158,13 @@ def get_genres_from_object(object):
     return object.id, object_res['genres']
 
 def save_raw_preview_to_bucket(args_tuple):
-    track, bucket = args_tuple 
+    track, genre, bucket = args_tuple 
     raw_track = client.get_raw_preview(track.preview_url, delay=rate_limit_delay)
-    save_raw_preview_to_cloud(raw_track, track.id, bucket)
+    save_raw_preview_to_cloud(raw_track, '{genre}_{id}'.format(genre=genre, id=track.id), bucket)
 
     progress_counter.value += 1
 
-    if progress_counter.value > 0 and progress_counter.value % 1000 == 0:
+    if progress_counter.value > 0 and progress_counter.value % 200 == 0:
         log('{0} raw previews saved'.format(progress_counter.value))
 
 class Scraper(object):
@@ -465,8 +466,12 @@ class Scraper(object):
         log('Finished fetching objects from public playlists')
 
     def download_raw_previews_for_genre(self, genre):
-        tracks_from_db = self.__db.query(Track).join(Artist, Track.artists).join(Genre, Artist.genres).filter(and_(Genre.name==genre, Track.preview_url != None)).all()
-	print(len(tracks_from_db))	
+        tracks_from_db = self.__db.query(Track) \
+	                    .join(Artist, Track.artists) \
+                            .join(Genre, Artist.genres) \
+                            .filter(and_(Genre.name==genre, Track.preview_url != None)) \
+                            .order_by(func.random()).limit(1000).all()
+
 	log('{} previews to download'.format(len(tracks_from_db)))	
 	
-	self.__parallel_map(save_raw_preview_to_bucket, [(track, 'song-embeddings-' + genre) for track in tracks_from_db])
+	self.__parallel_map(save_raw_preview_to_bucket, [(track, genre, 'song-embeddings-raw-previews') for track in tracks_from_db])

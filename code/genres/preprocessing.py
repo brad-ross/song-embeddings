@@ -1,6 +1,6 @@
 from ..data.cloud_storage import get_path_to_bucket, list_files_in_bucket, open_file_in_bucket
 from ..data.audio import mp3_to_array, get_spectrogram
-from random import choice, sample
+from random import choice, randrange
 import os
 from multiprocessing import Pool
 import numpy as np
@@ -14,7 +14,7 @@ orch_files = get_mp3_filenames(list_files_in_bucket('song-embeddings-orchestral'
 
 print('Retrieved file lists...')
 
-sample_size = 100
+sample_size = 150
 
 def sample_nonempty_files(files, bucket, k):
     samples = []
@@ -40,7 +40,9 @@ def get_flat_spectrogram_for(file_tup):
     f, bucket = file_tup
     with open_file_in_bucket(f, bucket) as mp3:
         mp3_array, rate = mp3_to_array(mp3)
-        freqs, times, spec = get_spectrogram(mp3_array, rate)
+        seg_size = rate * 5
+        rand_start = randrange(mp3_array.size - 1 - seg_size)
+        freqs, times, spec = get_spectrogram(mp3_array[rand_start:(rand_start + seg_size)], rate)
 	return spec.flatten()
 
 def get_flat_specs_from(files, bucket): 
@@ -57,4 +59,6 @@ print('Generated flattened histograms...')
 
 flat_specs = np.vstack((edm_flat_specs, rock_flat_specs, orch_flat_specs))
 genre_labels = np.hstack((np.zeros(edm_flat_specs.shape[0]), np.zeros(rock_flat_specs.shape[0]) + 1, np.zeros(orch_flat_specs.shape[0]) + 2))
-np.savez_compressed(open_file_in_bucket('raw_flat_specs.npz', 'song-embeddings-genre-classification'), spectrograms=flat_specs, genres=genre_labels)
+print(flat_specs.shape)
+np.save(open_file_in_bucket('spectrograms_5s.npy', 'song-embeddings-genre-classification'), flat_specs)
+np.save(open_file_in_bucket('genres_5s.npy', 'song-embeddings-genre-classification'), genre_labels)
