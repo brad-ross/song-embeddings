@@ -46,19 +46,20 @@ def mat_k_means(matrixes, n_clusters, reduce_=True, dim=150):
     N_ex = len(matrixes)
     #matrixes with dimesnsions reduced
     if reduce_:
-        mats_ = [low_rank_approx(m, r=dim).flatten() for m in matrixes]
+        mats_ = [low_rank_approx(m, r=dim).flatten('F') for m in matrixes]
     else:
-        mats_ = [m.flatten() for m in matrixes]
+        mats_ = [m.flatten('F') for m in matrixes]
 
     #array of predicted clusters
-    pred_cls = KMeans(n_clusters=n_clusters, random_state=random_state).fit_predict(mats_)
+    pred_cls = KMeans(n_clusters=n_clusters).fit_predict(mats_)
 
     #matrix:predicted cluster
-    return [mats_[i]:pred_cls[i] for i in range(N_ex)]
+    return pred_cls
+#     return {mats_[i]:pred_cls[i] for i in range(N_ex)}
 
 
 
-def mat_k_means2(matrixes, n_clusters, reduce=True, dim=150):
+def mat_k_means2(matrixes, n_clusters, reduce_=True, dim=150):
     """
     Does k-means clustering on an array of matrixes
     If reduce_, then does dimension reduction as in shrink_and_flatten
@@ -70,8 +71,9 @@ def mat_k_means2(matrixes, n_clusters, reduce=True, dim=150):
     else:
         mats_ = [m.flatten() for m in matrixes]
 
-    #array of predicted clusters
-    pred_cls = KMeans(n_clusters=n_clusters, random_state=random_state).fit_predict(mats_)
+    #array of predicted cluster
+    pred_cls = KMeans(n_clusters=n_clusters).fit_predict(mats_)
 
     #matrix:predicted cluster
-    return [mats_[i]:pred_cls[i] for i in range(N_ex)]
+    return pred_cls
+#     return {mats_[i]:pred_cls[i] for i in range(N_ex)}
