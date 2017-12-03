@@ -21,7 +21,7 @@ def get_nonempty_files(files, bucket):
 
 log('retrieving raw previews...')
 
-all_preview_files = list_files_in_bucket('song-embeddings-raw-previews')[:10]
+all_preview_files = list_files_in_bucket('song-embeddings-raw-previews')
 raw_preview_files = get_nonempty_files(all_preview_files, 'song-embeddings-raw-previews') * NUM_SAMPLES_PER_SONG
 shuffle(raw_preview_files)
 
