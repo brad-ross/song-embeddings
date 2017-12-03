@@ -1,5 +1,5 @@
 from ..config import get_config
-from .utils import log
+from ..utils import log
 from .spotify import Client
 from ..data.db import get_session
 from multiprocessing import Pool, Value
