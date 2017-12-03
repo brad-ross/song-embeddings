@@ -1,6 +1,6 @@
 from scraper import Scraper
 from time import time
-from .utils import log
+from ..utils import log
 
 genres_to_scrape = ['classical', 'rap', 'hip hop', 'edm', 'pop', 'house', 'indie rock', 
                     'latin', 'rock', 'r&b', 'metal', 'funk', 'folk', 'country', 'jazz']

@@ -4,7 +4,7 @@ from base64 import b64encode
 from pydub import AudioSegment
 import numpy as np
 from time import sleep
-from .utils import log
+from ..utils import log
 import traceback
 
 import requests.packages.urllib3
