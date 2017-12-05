@@ -7,7 +7,7 @@ import numpy as np
 from ..utils import log
 
 NUM_SAMPLES_PER_SONG = 10
-DATA_BATCH_SIZE = 2000
+DATA_BATCH_SIZE = 12000
 
 def get_nonempty_files(files, bucket):
     nonempty = []
@@ -21,8 +21,9 @@ def get_nonempty_files(files, bucket):
 
 log('retrieving raw previews...')
 
-all_preview_files = list_files_in_bucket('song-embeddings-raw-previews')
-raw_preview_files = get_nonempty_files(all_preview_files, 'song-embeddings-raw-previews') * NUM_SAMPLES_PER_SONG
+all_preview_files = [f for f in list_files_in_bucket('song-embeddings-raw-previews') if f != 'dirEmptyCheck']
+log('{} total preview files'.format(len(all_preview_files)))
+raw_preview_files = all_preview_files * NUM_SAMPLES_PER_SONG #get_nonempty_files(all_preview_files, 'song-embeddings-raw-previews') * NUM_SAMPLES_PER_SONG
 shuffle(raw_preview_files)
 
 labels_file = open_file_in_bucket('labels.csv', 'song-embeddings-dataset')
