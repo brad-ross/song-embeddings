@@ -13,9 +13,12 @@ mount_location = config['storage']['mount_location']
 def get_path_to_bucket(bucket_name):
     return os.path.expanduser(os.path.join(mount_location, bucket_name))
 
+def get_path_to_file_in_bucket(filename, bucket_name):
+    abs_path = get_path_to_bucket(bucket_name)
+    return os.path.join(abs_path, filename)
+
 def open_file_in_bucket(filename, bucket):
-    abs_path = get_path_to_bucket(bucket)
-    return open(os.path.join(abs_path, filename), 'a+') # should allow both reads and writes
+    return open(get_path_to_file_in_bucket(filename, bucket), 'a+') # should allow both reads and writes
 
 def list_files_in_bucket(bucket):
     abs_path = get_path_to_bucket(bucket)
