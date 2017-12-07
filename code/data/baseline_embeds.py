@@ -1,5 +1,3 @@
-
-
 import numpy as np
 from scipy import linalg
 from sklearn.cluster import KMeans
@@ -17,7 +15,7 @@ def raw_spec_embedding(specs):
     Worries: SUPER SLOW (big matrixes!!)
 
     """
-    return np.array([m.flatten('F') for m in all_specs]) #F -> flatten along columns, which make more sense
+    return np.array([m.flatten('F') for m in specs]) #F -> flatten along columns, which make more sense
 
 def pca_embedding(specs, r=150):
     """
@@ -121,14 +119,15 @@ def mog_eval(embedding, labels, n_genres=None):
 genres = np.load("genres_5s.npy")
 specs = np.load("spectrograms_5s.npy")
 
-# oe_specs = specs[range(150) + range(300, 450),:]
-# oe_grs = genres[range(150) + range(300, 450)]
+oe_specs = specs[range(150) + range(300, 450),:]
+oe_grs = genres[range(150) + range(300, 450)]
 
 # rs = [1, 2, 3, 4, 5, 10, 20, 40, 80, 160]
 # performances = []
 # for r in rs:
-#     big_pca_embed = pca_embedding(oe_specs, r=r)
-#     perf = kmeans_eval(big_pca_embed, oe_grs)
+big_pca_embed = pca_embedding(oe_specs, r=5)
+perf = mog_eval(big_pca_embed, oe_grs)
+print perf
 #     performances.append(perf)
 #     print r, perf
 # print performances
