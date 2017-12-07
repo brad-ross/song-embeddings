@@ -6,7 +6,6 @@ def compose_layers(layers):
     h = layers[0]
     for i in range(1, len(layers)):
         h = layers[i](h)
-
     return h
 
 class ALIModel:
@@ -48,14 +47,46 @@ class ALIModel:
 
 
     def decoder_model(self):
-        
-        
+        x = compose_layers([
+            Input(self.embedding_size),
+
+            Conv2DTranspose(filters=256, kernel_size=(7, 4), strides=1, padding='same'),
+            LeakyReLU(alpha=0.02),
+            BatchNormalization(),
+
+            Conv2DTranspose(filters=128, kernel_size=(6, 5), strides=3, padding='same'),
+            LeakyReLU(alpha=0.02),
+            BatchNormalization(),
+
+            Conv2DTranspose(filters=64, kernel_size=(4, 4), strides=2, padding='same'),
+            LeakyReLU(alpha=0.02),
+            BatchNormalization(),
+
+            Conv2DTranspose(filters=32, kernel_size=(5, 3), strides=3, padding='same'),
+            LeakyReLU(alpha=0.02),
+            BatchNormalization(),
+
+            Conv2DTranspose(filters=32, kernel_size=(5, 4), strides=3, padding='same'),
+            LeakyReLU(alpha=0.02),
+            BatchNormalization(),
+
+            Conv2D(filters=32, kernel_size=(1, 1), strides=1, padding='same'),
+            LeakyReLU(alpha=0.02),
+            BatchNormalization(),
+
+            Conv2D(filters=32, kernel_size=(1, 1), strides=1, padding='same'),
+            #should these be here?
+            LeakyReLU(alpha=0.02),
+            BatchNormalization(),
+        ])
+
+
         return Model([z], x)
 
     def discriminator_model(self):
         z = Input(self.embedding_size)
         Dz = compose_layers([
-            z, 
+            z,
 
             Conv2D(filters=512, kernel_size=(1, 1), strides=1, padding='same'),
             LeakyReLU(alpha=0.02),
@@ -100,11 +131,11 @@ class ALIModel:
             Conv2D(filters=1024, kernel_size=(1, 1), strides=1, padding='same'),
             LeakyReLU(alpha=0.02),
             Dropout(0.2),
-    
+
             Conv2D(filters=1024, kernel_size=(1, 1), strides=1, padding='same'),
             LeakyReLU(alpha=0.02),
             Dropout(0.2),
-    
+
             Conv2D(filters=1, kernel_size=(1, 1), strides=1, padding='same', activation='sigmoid')
         ])
 
@@ -117,5 +148,3 @@ class ALIModel:
 
         real_x_discriminator = discriminator([decoder.inputs[0], encoder])
         fake_x_discriminator = discriminator([decoder, encoder.inputs[1]])
-
-
