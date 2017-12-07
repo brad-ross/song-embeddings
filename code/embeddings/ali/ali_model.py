@@ -1,7 +1,7 @@
 from keras.models import Model
 from keras.layers import Input, concatenate, Conv2D, Conv2DTranspose, \
                          Dropout, LeakyReLU, BatchNormalization, MaxPool2D,\
-                         ZeroPadding2D
+                         ZeroPadding2D, Flatten, Reshape, Activation
 from keras_adversarial import AdversarialModel, simple_bigan, AdversarialOptimizerSimultaneous, normal_latent_sampling
 from keras.optimizers import Adam
 
@@ -16,6 +16,7 @@ class ALIModel:
         self.data_shape = (257, 430, 1)
         self.embedding_size = (1, 1, 64)
         self.padding_type = 'valid'
+        self.model = self.ali_model()
 
     def encoder_model(self):
         x = Input(self.data_shape)
@@ -47,8 +48,6 @@ class ALIModel:
             Conv2D(filters=64, kernel_size=(1, 1), strides=1, padding=self.padding_type)
         ])
 
-        # print z.shape
-
         return Model(x, z, name='encoder')
 
 
@@ -56,24 +55,23 @@ class ALIModel:
         z = Input(self.embedding_size)
         x = compose_layers([
             z,
-
-            Conv2DTranspose(filters=256, kernel_size=(6, 4), strides=1, padding=self.padding_type),
+            Conv2DTranspose(filters=256, kernel_size=(4, 6), strides=1, padding=self.padding_type),
             LeakyReLU(alpha=0.02),
             BatchNormalization(),
 
-            Conv2DTranspose(filters=128, kernel_size=(7, 4), strides=3, padding=self.padding_type),
+            Conv2DTranspose(filters=128, kernel_size=(4, 7), strides=3, padding=self.padding_type),
             LeakyReLU(alpha=0.02),
             BatchNormalization(),
 
-            Conv2DTranspose(filters=64, kernel_size=(5, 4), strides=2, padding=self.padding_type),
-            LeakyReLU(alpha=0.02),
-            BatchNormalization(),
-
-            Conv2DTranspose(filters=32, kernel_size=(5, 4), strides=3, padding=self.padding_type),
+            Conv2DTranspose(filters=64, kernel_size=(4, 5), strides=2, padding=self.padding_type),
             LeakyReLU(alpha=0.02),
             BatchNormalization(),
 
             Conv2DTranspose(filters=32, kernel_size=(4, 5), strides=3, padding=self.padding_type),
+            LeakyReLU(alpha=0.02),
+            BatchNormalization(),
+
+            Conv2DTranspose(filters=32, kernel_size=(5, 4), strides=3, padding=self.padding_type),
             LeakyReLU(alpha=0.02),
             BatchNormalization(),
 
@@ -83,7 +81,6 @@ class ALIModel:
 
             Conv2D(filters=1, kernel_size=(1, 1), strides=1, padding=self.padding_type, activation='sigmoid')
         ])
-        print x.shape
 
         return Model(z, x, name='decoder')
 
@@ -94,13 +91,10 @@ class ALIModel:
 
             Conv2D(filters=512, kernel_size=(1, 1), strides=1, padding=self.padding_type),
             LeakyReLU(alpha=0.02),
-            Dropout(0.2),
 
             Conv2D(filters=512, kernel_size=(1, 1), strides=1, padding=self.padding_type),
-            LeakyReLU(alpha=0.02),
-            Dropout(0.2)
+            LeakyReLU(alpha=0.02)
         ])
-        # print Dz.shape
 
         x = Input(self.data_shape)
         Dx = compose_layers([
@@ -126,15 +120,17 @@ class ALIModel:
 
             Conv2D(filters=512, kernel_size=(1, 3), strides=2, padding=self.padding_type),
             LeakyReLU(alpha=0.02),
-            BatchNormalization(),
+            BatchNormalization()
         ])
+
         concat_inputs = concatenate([Dz, Dx])
+        combined_3d_inputs = Reshape((1, 1, 1024))(concat_inputs)
         conv1 = Conv2D(filters=1024, kernel_size=(1, 1), strides=1, padding=self.padding_type)
         conv2 = Conv2D(filters=1024, kernel_size=(1, 1), strides=1, padding=self.padding_type)
         conv3 = Conv2D(filters=1, kernel_size=(1, 1), strides=1, padding=self.padding_type, activation='sigmoid')
 
         Dxz_train_disc = compose_layers([
-            concat_inputs,
+            combined_3d_inputs,
 
             conv1,
             LeakyReLU(alpha=0.02),
@@ -144,12 +140,14 @@ class ALIModel:
             LeakyReLU(alpha=0.02),
             Dropout(0.2),
 
-            conv3
+            conv3,
+
+            Flatten()
         ])
-        m_train_disc = Model([z, x], Dxz_train_disc, name='discriminator_train')
+        m_train_disc = Model([z, x], Dxz_train_disc, name='disc_train_disc')
 
         Dxz_train_enc_dec = compose_layers([
-            concat_inputs,
+            combined_3d_inputs,
 
             conv1,
             LeakyReLU(alpha=0.02),
@@ -157,15 +155,16 @@ class ALIModel:
             conv2,
             LeakyReLU(alpha=0.02),
 
-            conv3
+            conv3,
+
+            Flatten()
         ])
-        m_train_enc_dec = Model([z, x], Dxz_train_enc_dec, name='discriminator_test')
+        m_train_enc_dec = Model([z, x], Dxz_train_enc_dec, name='disc_train_enc_dec')
 
         return m_train_enc_dec, m_train_disc
 
     def ali_model(self):
         encoder = self.encoder_model()
-        # print encoder.input_shape, encoder.output_shape
         decoder = self.decoder_model()
         disc_train_enc_dec, disc_train_disc = self.discriminator_model()
 
@@ -174,18 +173,17 @@ class ALIModel:
 
         x = bigan_train_enc_dec.inputs[1]
         z = normal_latent_sampling(self.embedding_size)(x)
-        # print x.shape, z.shape
 
         #fix names???
         bigan_train_enc_dec = Model(x, bigan_train_enc_dec([z, x]))
         bigan_train_disc    = Model(x, bigan_train_disc([z, x]))
 
-        encoder.summary()
-        decoder.summary()
-        disc_train_enc_dec.summary()
-        disc_train_disc.summary()
-        bigan_train_enc_dec.summary()
-        bigan_train_disc.summary()
+        # encoder.summary()
+        # decoder.summary()
+        # disc_train_enc_dec.summary()
+        # disc_train_disc.summary()
+        # bigan_train_enc_dec.summary()
+        # bigan_train_disc.summary()
 
         model = AdversarialModel(player_models=[bigan_train_enc_dec, bigan_train_disc],
                                  player_params=[encoder.trainable_weights + encoder.trainable_weights,\
@@ -195,8 +193,4 @@ class ALIModel:
                                   player_optimizers=[Adam(lr=1e-4, beta_1=0.5, beta_2=1e-3),\
                                                      Adam(lr=1e-4, beta_1=0.5, beta_2=1e-3)],
                                   loss='binary_crossentropy')
-
         return model
-
-ali =  ALIModel()
-ali.ali_model()
