@@ -2,7 +2,7 @@ from keras.models import Model
 from keras.layers import Input, concatenate, Conv2D, Conv2DTranspose, \
                          Dropout, LeakyReLU, BatchNormalization, MaxPool2D,\
                          ZeroPadding2D, Flatten, Reshape, Activation
-from keras_adversarial import AdversarialModel, simple_bigan, AdversarialOptimizerSimultaneous, normal_latent_sampling
+from keras_adversarial import AdversarialModel, simple_bigan, fix_names, AdversarialOptimizerSimultaneous, normal_latent_sampling
 from keras.optimizers import Adam
 
 def compose_layers(layers):
@@ -175,8 +175,8 @@ class ALIModel:
         z = normal_latent_sampling(self.embedding_size)(x)
 
         #fix names???
-        bigan_train_enc_dec = Model(x, bigan_train_enc_dec([z, x]))
-        bigan_train_disc    = Model(x, bigan_train_disc([z, x]))
+        bigan_train_enc_dec = Model(x, fix_names(bigan_train_enc_dec([z, x]), bigan_train_enc_dec.output_names))
+        bigan_train_disc    = Model(x, fix_names(bigan_train_disc([z, x]), bigan_train_disc.output_names))
 
         # encoder.summary()
         # decoder.summary()

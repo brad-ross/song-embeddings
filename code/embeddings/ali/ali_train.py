@@ -3,6 +3,7 @@ from keras_adversarial import gan_targets
 import numpy as np
 
 model = ALIModel().model
+print model.metrics_names
 data = np.load('./test_0_1000.npy')
 
 batch_size = 101
