@@ -7,8 +7,8 @@ from ..embeddings.raw.raw_embed import raw_embedding
 from ..embeddings.ali.ali_embed_l2 import create_embedding_fn
 from ..embeddings.ali.ali_model_l2 import ALIModel
 
-labels = get_numerical_labels(get_path_to_file_in_bucket('real_labels.csv', 'song-embeddings-dataset'))[144000:146680]
-specs = np.load(get_path_to_file_in_bucket('144000_146680.npy', 'song-embeddings-dataset'))
+labels = get_numerical_labels(get_path_to_file_in_bucket('real_labels.csv', 'song-embeddings-dataset'))[108000:120000]
+specs = np.load(get_path_to_file_in_bucket('108000_120000.npy', 'song-embeddings-dataset'))
 
 small_indices = np.where((labels == 2) | (labels == 0) | (labels == 14))
 labels = labels[small_indices]

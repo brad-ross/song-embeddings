@@ -20,7 +20,7 @@ class ALIModel:
         self.padding_type = 'valid'
 	self.leaky_relu_slope = 0.1
 	self.reg_params = (0.0001, 0.0001)#(0.0001, 0.0001)
-	self.train_schedule = [0]*2 + [1]
+	self.train_schedule = [0]*4 + [1]
         self.model = self.ali_model()
 
     def load_weights_from_file(self, file_path):
