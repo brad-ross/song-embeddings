@@ -16,8 +16,3 @@ def create_embedding_fn(model_class, weights_file):
         return np.reshape(model.encoder.predict(specs_with_depth), (specs.shape[0], -1))
 
     return generate_embedding
-
-embedding_fn = create_embedding_fn(ALIModel, 'model_weights_7_epoch_2')
-embedding = embedding_fn(np.load(open_file_in_bucket('test_0_1000.npy', 'song-embeddings-dataset')))
-print embedding
-print embedding.shape
