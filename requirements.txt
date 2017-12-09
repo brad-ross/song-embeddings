@@ -7,8 +7,11 @@ cycler==0.10.0
 enum34==1.1.6
 funcsigs==1.0.2
 futures==3.1.1
+h5py==2.7.1
 html5lib==0.9999999
 idna==2.5
+Keras==2.1.2
+keras-adversarial==0.0.3
 Markdown==2.6.9
 matplotlib==2.1.0
 mock==2.0.0
@@ -22,6 +25,7 @@ pydub==0.20.0
 pyparsing==2.2.0
 python-dateutil==2.6.1
 pytz==2017.3
+PyYAML==3.12
 requests==2.18.3
 scikit-learn==0.19.1
 scipy==1.0.0
