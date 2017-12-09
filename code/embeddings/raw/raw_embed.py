@@ -1,6 +1,6 @@
 import numpy as np
 
-def raw_spec_embedding(specs):
+def raw_embedding(specs):
     """
     Baseline embedding: flatten spectograms and stack them.
 

@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.preprocessing import scale
 from sklearn.decomposition import PCA
 
-def pca_embedding(specs, r=150):
+def pca_embedding(specs, r=64):
     """
     Baseline embedding: take the spectograms, flatten them, stack them, and project onto the
     first 150 PCA components.
@@ -12,7 +12,6 @@ def pca_embedding(specs, r=150):
 
     """
     X = scale(np.reshape(specs, (specs.shape[0], -1)))
-    print X.shape
     pca = PCA(n_components=r)
     pca.fit(X)
     comps = pca.components_
