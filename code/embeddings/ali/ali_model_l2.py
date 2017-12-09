@@ -1,7 +1,7 @@
 from keras.models import Model
 from keras.layers import Input, concatenate, Conv2D, Conv2DTranspose, \
                          Dropout, LeakyReLU, BatchNormalization, AveragePooling2D,\
-                         ZeroPadding2D, Flatten, Reshape, Activation
+                         ZeroPadding2D, Flatten, Reshape, Activation, GaussianNoise
 from keras_adversarial import AdversarialModel, simple_bigan, AdversarialOptimizerScheduled, normal_latent_sampling
 from keras.optimizers import Adam
 from keras.losses import binary_crossentropy
@@ -19,8 +19,12 @@ class ALIModel:
         self.embedding_size = (1, 1, 64)
         self.padding_type = 'valid'
 	self.leaky_relu_slope = 0.1
-	self.reg_params = (0.0005, 0.0005)
+	self.reg_params = (0.0001, 0.0001)#(0.0001, 0.0001)
+	self.train_schedule = [0]*2 + [1]
         self.model = self.ali_model()
+
+    def load_weights_from_file(self, file_path):
+	self.model.load_weights(file_path)
 
     def encoder_model(self):
         x = Input(self.data_shape)
@@ -59,6 +63,7 @@ class ALIModel:
         z = Input(self.embedding_size)
         x = compose_layers([
             z,
+
             Conv2DTranspose(filters=256, kernel_size=(4, 6), strides=1, padding=self.padding_type),
             LeakyReLU(alpha=self.leaky_relu_slope),
             BatchNormalization(),
@@ -83,7 +88,7 @@ class ALIModel:
             LeakyReLU(alpha=self.leaky_relu_slope),
             BatchNormalization(),
 
-            Conv2D(filters=1, kernel_size=(1, 1), strides=1, padding=self.padding_type, activation='sigmoid')
+            Conv2D(filters=1, kernel_size=(1, 1), strides=1, padding=self.padding_type)
         ])
 
         return Model(z, x, name='decoder')
@@ -103,6 +108,7 @@ class ALIModel:
         x = Input(self.data_shape)
         Dx = compose_layers([
             x,
+	    GaussianNoise(10),
 
             Conv2D(filters=32, kernel_size=(5, 4), strides=3, padding=self.padding_type),
             LeakyReLU(alpha=self.leaky_relu_slope),
@@ -131,7 +137,7 @@ class ALIModel:
         combined_3d_inputs = Reshape((1, 1, 1024))(concat_inputs)
         conv1 = Conv2D(filters=1024, kernel_size=(1, 1), strides=1, padding=self.padding_type, kernel_regularizer=l1_l2(*self.reg_params))
         conv2 = Conv2D(filters=1024, kernel_size=(1, 1), strides=1, padding=self.padding_type, kernel_regularizer=l1_l2(*self.reg_params))
-        conv3 = Conv2D(filters=1, kernel_size=(1, 1), strides=1, padding=self.padding_type, kernel_regularizer=l1_l2(*self.reg_params), activation='sigmoid')
+        conv3 = Conv2D(filters=1, kernel_size=(1, 1), strides=1, padding=self.padding_type, kernel_regularizer=l1_l2(*self.reg_params))
 
         Dxz_train_disc = compose_layers([
             combined_3d_inputs,
@@ -193,8 +199,8 @@ class ALIModel:
                                  player_params=[self.encoder.trainable_weights + self.encoder.trainable_weights,\
                                                 disc_train_disc.trainable_weights],
                                  player_names=['encoder_decoder', 'discriminator'])
-        model.adversarial_compile(adversarial_optimizer=AdversarialOptimizerScheduled([0]*5 + [1]),
-                                  player_optimizers=[Adam(lr=1e-4, beta_1=0.5, beta_2=1e-3),\
-                                                     Adam(lr=1e-4, beta_1=0.5, beta_2=1e-3)],
-                                  loss=['binary_crossentropy', 'binary_crossentropy'])
+        model.adversarial_compile(adversarial_optimizer=AdversarialOptimizerScheduled(self.train_schedule),
+                                  player_optimizers=[Adam(lr=5e-5, beta_1=0.5, beta_2=1e-3),\
+                                                     Adam(lr=5e-5, beta_1=0.5, beta_2=1e-3)],
+                                  loss=['mean_squared_error', 'mean_squared_error'])
         return model
