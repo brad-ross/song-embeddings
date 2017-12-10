@@ -52,7 +52,7 @@ ali_embedding = create_embedding_fn(ALIModel, 'model_weights_8_epoch_4')
 labels = get_numerical_labels(get_path_to_file_in_bucket('real_labels.csv', 'song-embeddings-dataset'))[108000:120000]
 specs = np.load(get_path_to_file_in_bucket('108000_120000.npy', 'song-embeddings-dataset'))
 
-def perform_tests(embedding_fn, genres, num_per_genre, tsne_params, test_name, fn_name="", plot_path=None):
+def perform_tests(embedding_fn, genres, num_per_genre, tsne_params, test_name, plot_type='t-sne', fn_name="", plot_path=None):
     chosen_genres = [GENRE_TO_LABEL[g] for g in genres]
     positions = np.array([], dtype=int)
     for cg in chosen_genres:
@@ -68,6 +68,7 @@ def perform_tests(embedding_fn, genres, num_per_genre, tsne_params, test_name, f
     if plot_path != None:
         plot_embedding(embedding, new_labels, \
                        title=test_name + ': Embedding using ' + fn_name,\
+		       plot_type=plot_type,
 		       tsne_params=tsne_params,
                        save_path=plot_path + '_embed_plot.png',\
                        label_dict=LABEL_TO_GENRE)
@@ -76,28 +77,30 @@ def perform_tests(embedding_fn, genres, num_per_genre, tsne_params, test_name, f
 def run_comparison_tests(genres, num_per_genre, emebdding_fns=[pca_embedding, ali_embedding],\
                          fn_names=['PCA Embedding', 'ALI Embedding'],\
                          test_name='',
+			 plot_type='t-sne',
 			 tsne_params={},
                          plot_path=None):
     if plot_path != None:
         paths = [plot_path + '_pca', plot_path + '_ali']
     else:
         paths = [None, None]
-
+    
     results_pca = perform_tests(emebdding_fns[0], genres, num_per_genre,\
-                                tsne_params, test_name=test_name, fn_name=fn_names[0], plot_path=paths[0])
+                                tsne_params, plot_type=plot_type, test_name=test_name, fn_name=fn_names[0], plot_path=paths[0])
     results_ali = perform_tests(emebdding_fns[1], genres, num_per_genre,\
-                                tsne_params, test_name=test_name, fn_name=fn_names[1], plot_path=paths[1])
+                                tsne_params, plot_type=plot_type, test_name=test_name, fn_name=fn_names[1], plot_path=paths[1])
 
     if plot_path != None:
         make_bar_plot(results_pca, results_ali, ['Adjusted Mutual Information', 'V-measure'],\
                       fn_names, plot_path + '_bar', test_name=test_name)
 
 
-def do_all_tests_make_all_plots(genre_sets, nums_per_genre, test_names, tsne_params, plot_path=None):
+def do_all_tests_make_all_plots(genre_sets, nums_per_genre, test_names, plot_types, tsne_params, plot_path=None):
     for i in range(len(genre_sets)):
         genres_to_run = genre_sets[i]
         num_per_genre = nums_per_genre[i]
         test_name = test_names[i]
+        plot_type = plot_types[i]
 	tsne_param = tsne_params[i]
 
         curr_plot_path = plot_path
@@ -105,35 +108,45 @@ def do_all_tests_make_all_plots(genre_sets, nums_per_genre, test_names, tsne_par
             curr_plot_path += '_' + string_to_filename(test_name)
 
         print '===== ' + test_name + ' ====='
-        run_comparison_tests(genres_to_run, num_per_genre, test_name=test_name, tsne_params=tsne_param, plot_path=curr_plot_path)
+        run_comparison_tests(genres_to_run, num_per_genre, test_name=test_name, plot_type=plot_type, tsne_params=tsne_param, plot_path=curr_plot_path)
         print '\n'
 
 def string_to_filename(s):
     return '_'.join([c.lower() for c in s.split(' ')])
 
 test_names = [
-    'Four Genres',
+    #'Four Genres',
+    #'Jazz + Rock ?= Funk',
     'All Genres'
 ]
 
 genre_sets = [
-    ['rock', 'indie rock', 'edm', 'classical'],
+   # ['rock', 'indie rock', 'edm', 'classical'],
+   # ['jazz', 'rock', 'funk'],
     GENRE_TO_LABEL.keys()
 ]
 
+plot_types = [
+    #'t-sne',
+   # 't-sne',
+    't-sne'
+]
+
 nums_per_genre = [
-    50,
+  #  50,
+ #   50,
     50
 ]
 
 tsne_params = [
-{'learning_rate': 50, 'perplexity': 20, 'n_iter': 2000},
-{'perplexity': 50, 'n_iter': 2000, 'learning_rate': 50}
+#{'learning_rate': 50, 'perplexity': 20, 'n_iter': 1000},
+#{'learning_rate': 50, 'perplexity': 20, 'n_iter': 1000},
+{'perplexity': 28, 'n_iter': 1000, 'learning_rate': 50}
 ]
 
 save_path     = get_path_to_file_in_bucket('embedding_plot', 'song-embeddings-dataset')
 
-do_all_tests_make_all_plots(genre_sets, nums_per_genre, test_names, tsne_params, plot_path=save_path)
+do_all_tests_make_all_plots(genre_sets, nums_per_genre, test_names, plot_types, tsne_params, plot_path=save_path)
 
 #just one test:
 # genres_to_run = ['rock', 'indie rock', 'edm', 'classical']
