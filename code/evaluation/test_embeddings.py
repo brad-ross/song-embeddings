@@ -52,7 +52,7 @@ ali_embedding = create_embedding_fn(ALIModel, 'model_weights_8_epoch_4')
 labels = get_numerical_labels(get_path_to_file_in_bucket('real_labels.csv', 'song-embeddings-dataset'))[108000:120000]
 specs = np.load(get_path_to_file_in_bucket('108000_120000.npy', 'song-embeddings-dataset'))
 
-def perform_tests(emebdding_fn, genres, num_per_genre, fn_name="", plot_path=None):
+def perform_tests(embedding_fn, genres, num_per_genre, fn_name="", plot_path=None):
     chosen_genres = [GENRE_TO_LABEL[g] for g in genres]
     positions = np.array([], dtype=int)
     for cg in chosen_genres:
@@ -94,18 +94,20 @@ def do_all_tests_make_all_plots(genre_sets, nums_per_genre, test_names, plot_pat
     for i in range(len(genre_sets)):
         genres_to_run = genre_sets[i]
         num_per_genre = nums_per_genre[i]
-        test_name = test_name[i]
+        test_name = test_names[i]
 
         curr_plot_path = plot_path
         if plot_path != None:
             curr_plot_path += '_' + test_name
 
+        print '===== ' + test_name + ' ====='
         run_comparison_tests(genres_to_run, num_per_genre, plot_path=curr_plot_path)
+        print '\n'
 
 
 test_names = [
     'three_diff',
-    'two_sim_one_diff'
+    'two_sim_one_diff',
     'all_genres'
 ]
 
@@ -120,7 +122,7 @@ nums_per_genre = [
     50,
     50
 ]
-save_path     = get_path_to_file_in_bucket('plotting_test', 'song-embeddings-dataset')
+save_path     = get_path_to_file_in_bucket('embedding_plot', 'song-embeddings-dataset')
 
 do_all_tests_make_all_plots(genre_sets, nums_per_genre, test_names, plot_path=save_path)
 

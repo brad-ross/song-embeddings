@@ -28,7 +28,7 @@ def plot_embedding(embed, labels, title="", save_path=None, legend=True, label_d
     #note: will take a while if emebdding is large
     #comp1, comp2 = pca.components_
     
-    tsne = TSNE(learning_rate=20)
+    tsne = TSNE(learning_rate=15)
     comp1, comp2 = tsne.fit_transform(scaled_embed).T
 
     genres = set(labels)

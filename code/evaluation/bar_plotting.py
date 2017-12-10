@@ -29,5 +29,5 @@ def plot_for_task(results1, results2, metrics, names, path, task):
     bar_plot(dict1, dict2, metrics, names, 'Performance on ' + task, path)
 
 def make_bar_plot(results1, results2, metrics, embed_names, path):
-    plot_for_task(results1, results2, metrics, embed_names, path + "kmeans.png", 'k-means Task')
-    plot_for_task(results1, results2, metrics, embed_names, path + "mog.png", 'Mixture of Gaussians Task')
+    plot_for_task(results1, results2, metrics, embed_names, path + '_kmeans.png', 'k-means Task')
+    plot_for_task(results1, results2, metrics, embed_names, path + '_mog.png', 'Mixture of Gaussians Task')
