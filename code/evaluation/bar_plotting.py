@@ -29,8 +29,8 @@ def bar_plot(dict1, dict2, names, title, path):
     ax.set_ylim([0, 1])
     ax.legend((rects1[0], rects2[0]), names)
     plt.title(title)
+    plt.gcf().subplots_adjust(bottom=0.25)
     plt.savefig(path)
-    plt.show()
 
 def merge_results(results, metrics):
     def fix_task(m):
@@ -39,8 +39,7 @@ def merge_results(results, metrics):
 
 
 
-def make_bar_plot(results1, results2, metrics, embed_names, path):
+def make_bar_plot(results1, results2, metrics, embed_names, path, test_name):
     m_results1 = merge_results(results1, metrics)
-    print m_results1
     m_results2 = merge_results(results2, metrics)
-    bar_plot(m_results1, m_results2, embed_names, 'Performance on k-means and Mixture of Gaussians', path + '.png')
+    bar_plot(m_results1, m_results2, embed_names, test_name + ': Performance on k-means and Mixture of Gaussians', path + '.png')
