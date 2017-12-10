@@ -29,7 +29,7 @@ class TestingGauntlet:
         test_results = {}
         for test in self.clustering_tests:
             test_results[test] = self.clustering_tests[test](embedding, labels)
-        return test_results
+        return test_results, emebdding
 
 
     def get_scores(self, true_labels, pred_labels):

@@ -12,13 +12,13 @@ def plot_embedding(embed, labels, title="", save_path=None, legend=True, label_d
     @param save_path:  path of where to save
     @param legend:     bool to show legend
     @param label_dict: dict that maps labels to real names (eg. {0:'rock', 1:'edm'})
-    
+
 
     """
     N = len(set(labels))
     pca = PCA(n_components=2)
     pca.fit(embed)
-    #note: will take a while emebdding is large
+    #note: will take a while if emebdding is large
     comp1, comp2 = pca.components_
 
     genres = set(labels)
@@ -33,15 +33,10 @@ def plot_embedding(embed, labels, title="", save_path=None, legend=True, label_d
             #use the label_dict labels
             plt.scatter(embed[g_dict[g]].dot(comp1), embed[g_dict[g]].dot(comp2), \
                        label='{i}'.format(i=label_dict[g]))
-            
+
     plt.title(title)
-    if legend: 
+    if legend:
         plt.legend(loc='best')
-    if save_path != None: 
+    if save_path != None:
         plt.save_fig(save_path)
 #     plt.show()
-        
-        
-            
-
-    
