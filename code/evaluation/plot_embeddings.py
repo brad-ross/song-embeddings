@@ -1,7 +1,12 @@
 import numpy as np
 from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
+from sklearn.preprocessing import scale
+from random import shuffle
+from sklearn.manifold import TSNE
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 def plot_embedding(embed, labels, title="", save_path=None, legend=True, label_dict=None):
     """
@@ -15,28 +20,35 @@ def plot_embedding(embed, labels, title="", save_path=None, legend=True, label_d
 
 
     """
+    plt.figure()
     N = len(set(labels))
-    pca = PCA(n_components=2)
-    pca.fit(embed)
+    scaled_embed = scale(embed)
+    #pca = PCA(n_components=2)
+    #pca.fit(scaled_embed)
     #note: will take a while if emebdding is large
-    comp1, comp2 = pca.components_
+    #comp1, comp2 = pca.components_
+    
+    tsne = TSNE(learning_rate=20)
+    comp1, comp2 = tsne.fit_transform(scaled_embed).T
 
     genres = set(labels)
     #genre->indices of that genre (so for loop will change colors)
     g_dict = {i:np.array([j for j in range(len(labels)) if labels[j] == i]) for i in genres}
-    for g in genres:
+    g_list = list(genres)
+    shuffle(g_list)
+    for g in g_list:
         if label_dict == None:
             #just use the labels of g as the labels
-            plt.scatter(embed[g_dict[g]].dot(comp1), embed[g_dict[g]].dot(comp2), \
+            plt.scatter(comp1[g_dict[g]], comp2[g_dict[g]],#embed[g_dict[g]].dot(comp1), embed[g_dict[g]].dot(comp2), \
                        label='{i}'.format(i=g))
         else:
             #use the label_dict labels
-            plt.scatter(embed[g_dict[g]].dot(comp1), embed[g_dict[g]].dot(comp2), \
+            plt.scatter(comp1[g_dict[g]], comp2[g_dict[g]],#embed[g_dict[g]].dot(comp1), embed[g_dict[g]].dot(comp2), \
                        label='{i}'.format(i=label_dict[g]))
 
     plt.title(title)
     if legend:
         plt.legend(loc='best')
     if save_path != None:
-        plt.save_fig(save_path)
+        plt.savefig(save_path)
 #     plt.show()

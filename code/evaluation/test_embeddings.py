@@ -9,7 +9,6 @@ from ..embeddings.ali.ali_model_l2 import ALIModel
 
 from plot_embeddings import *
 
-
 LABEL_TO_GENRE = {
     0: 'classical',
     1: 'country',
@@ -28,7 +27,7 @@ LABEL_TO_GENRE = {
     14: 'rock'
 }
 
-GENRE_TO_LABEL = = {
+GENRE_TO_LABEL = {
     'latin': 9,
     'indie rock': 7,
     'classical': 0,
@@ -50,14 +49,15 @@ GENRE_TO_LABEL = = {
 def perform_tests(emebdding_fn, specs, labels, genres, num_per_genre,
                 fn_name="", plot=False, plot_path=None):
     chosen_genres = [GENRE_TO_LABEL[g] for g in genres]
-    positions = np.array([])
+    positions = np.array([], dtype=int)
     for cg in chosen_genres:
         #gets first num_per_genre of genre cg. alternatively, we can get random ones
         positions = np.append(positions, np.where(labels == cg)[0][:num_per_genre])
     new_specs = specs[positions]
     new_labels = labels[positions]
 
-    results, embedding = gauntlet.run_tests(embedding_fn, specs, labels)
+    gauntlet = TestingGauntlet()
+    results, embedding = gauntlet.run_tests(embedding_fn, new_specs, new_labels)
     print fn_name, 'results: '
     gauntlet.print_results(results)
     if plot:
@@ -71,14 +71,21 @@ labels = get_numerical_labels(get_path_to_file_in_bucket('real_labels.csv', 'son
 specs = np.load(get_path_to_file_in_bucket('108000_120000.npy', 'song-embeddings-dataset'))
 
 
-genres_to_run = ['classical', 'edm', 'rock']
-num_per_genre = 20
+genres_to_run = ['rock', 'indie rock', 'edm', 'classical']
+num_per_genre = 50
 embedding_fn  = pca_embedding
-fn_name       = "PCA embedding"
+fn_name       = "PCA Embedding"
+save_path     = get_path_to_file_in_bucket('pca_embedding_test_plot.png', 'song-embeddings-dataset')
 perform_tests(embedding_fn, specs, labels, genres_to_run, num_per_genre,\
-              fn_name=fn_name, plot=True)
+              fn_name=fn_name, plot=True, plot_path=save_path)
 
-
+genres_to_run = ['rock', 'indie rock', 'edm', 'classical']
+num_per_genre = 50
+embedding_fn  = create_embedding_fn(ALIModel, 'model_weights_8_epoch_4')
+fn_name       = "ALI Embedding"
+save_path     = get_path_to_file_in_bucket('ali_embedding_test_plot.png', 'song-embeddings-dataset')
+perform_tests(embedding_fn, specs, labels, genres_to_run, num_per_genre,\
+              fn_name=fn_name, plot=True, plot_path=save_path)
 #
 # small_indices = np.where((labels == 2) | (labels == 0) | (labels == 14))
 # labels = labels[small_indices]
