@@ -43,25 +43,25 @@ def create_data_batch(previews_to_process, input_bucket, output_bucket, filename
     np.save(open_file_in_bucket('{}.npy'.format(filename), output_bucket), specs)
     del specs
 
-def generate_dataset(name, previews_bucket, output_bucket, num_samples_per_song, shuffle=True):
-    all_preview_files = [f for f in list_files_in_bucket(previews_bucket) if f != 'dirEmptyCheck']
+def generate_dataset(name, previews_prefix, previews_bucket, output_bucket, num_samples_per_song, shuffle=True):
+    all_preview_files = [f for f in list_files_in_bucket(previews_bucket) if f != 'dirEmptyCheck' and f.startswith(previews_prefix)]
     log('{} total preview files'.format(len(all_preview_files)))
     raw_preview_files = all_preview_files * num_samples_per_song 
     if shuffle:
         shuffle(raw_preview_files)
 
-    with open_file_in_bucket('{name}_labels.csv'.format(name=name), previews_bucket) as labels_file:
+    with open_file_in_bucket('{name}_labels.csv'.format(name=name), output_bucket) as labels_file:
         for p in raw_preview_files:
-            line = p.split('.')[0].replace(',', ';').replace('_', ',')
+            line = p.split('.mp3')[0].replace(',', ';').replace('_', ',')
             labels_file.write(line + '\n')
 
     log('{} preview samples'.format(len(raw_preview_files)))
 
     num_batches = len(raw_preview_files)/DATA_BATCH_SIZE + 1
     for start, end in [(i*DATA_BATCH_SIZE, min((i+1)*DATA_BATCH_SIZE, len(raw_preview_files))) for i in range(num_batches)]:
-        p = Process(target=create_data_batch, args=(raw_preview_files[start:end], previews_bucket, output_bucket, 'name_{}_{}'.format(start, end)))
+        p = Process(target=create_data_batch, args=(raw_preview_files[start:end], previews_bucket, output_bucket, '{}_{}_{}'.format(name, start, end)))
         p.start()
         p.join()
 
-generate_dataset('coldplay', 'song-embeddings-artist-experiments-previews', 'song-embeddings-artist-experiments', 10, shuffle=False)
+generate_dataset('billyjoel', 'Billy Joel', 'song-embeddings-artist-experiments-previews', 'song-embeddings-artist-experiments', 10, shuffle=False)
 

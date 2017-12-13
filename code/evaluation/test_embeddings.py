@@ -46,10 +46,31 @@ GENRE_TO_LABEL = {
     'funk': 4
 }
 
+GENRE_ORDER =  [
+    'classical',
+    'jazz',
+    'latin',
+    'folk',
+    
+    'country',
+    'funk',
+    'indie rock',
+    'rock',
+    'metal',   
+ 
+    'pop', 
+    'r&b',
+    'hip hop',
+    'rap',
+ 
+    'house',
+    'edm',
+]
+
 #things that are common that don't really need to be changed
 #(it was annoying to pass these around EVERYWHERE)
 ali_embedding = create_embedding_fn(ALIModel, 'model_weights_8_epoch_4')
-labels = get_numerical_labels(get_path_to_file_in_bucket('real_labels.csv', 'song-embeddings-dataset'))[108000:120000]
+label_mapping, labels = get_numerical_labels(get_path_to_file_in_bucket('real_labels.csv', 'song-embeddings-dataset'))[108000:120000]
 specs = np.load(get_path_to_file_in_bucket('108000_120000.npy', 'song-embeddings-dataset'))
 
 def perform_tests(embedding_fn, genres, num_per_genre, tsne_params, test_name, plot_type='t-sne', fn_name="", plot_path=None):
@@ -71,7 +92,8 @@ def perform_tests(embedding_fn, genres, num_per_genre, tsne_params, test_name, p
 		       plot_type=plot_type,
 		       tsne_params=tsne_params,
                        save_path=plot_path + '_embed_plot.png',\
-                       label_dict=LABEL_TO_GENRE)
+                       label_dict=LABEL_TO_GENRE,
+                       label_order=GENRE_ORDER)
     return results
 
 def run_comparison_tests(genres, num_per_genre, emebdding_fns=[pca_embedding, ali_embedding],\

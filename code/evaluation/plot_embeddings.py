@@ -9,28 +9,8 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 
-GENRE_ORDER =  [
-    'classical',
-    'jazz',
-    'latin',
-    'folk',
-    
-    'country',
-    'funk',
-    'indie rock',
-    'rock',
-    'metal',   
- 
-    'pop', 
-    'r&b',
-    'hip hop',
-    'rap',
- 
-    'house',
-    'edm',
-]
-
-def plot_embedding(embed, labels, plot_type, title="", tsne_params={}, save_path=None, legend=True, label_dict=None):
+def plot_embedding(embed, labels, plot_type='t-sne', title="", tsne_params={}, save_path=None, 
+                   legend=True, label_dict=None, label_order=None, legend_outside=False, alpha=0.7):
     """
     Projects embedding onto two dimensions, colors according to given label
     @param embed:      embedding matrix
@@ -44,8 +24,7 @@ def plot_embedding(embed, labels, plot_type, title="", tsne_params={}, save_path
     """
     plt.figure()
     N = len(set(labels))
-    if N > 10:
-        colors = cm.rainbow(np.linspace(0, 1, N))
+    colors = cm.rainbow(np.linspace(0, 1, N))
     scaled_embed = scale(embed)
     
     if plot_type == 'pca':
@@ -59,27 +38,26 @@ def plot_embedding(embed, labels, plot_type, title="", tsne_params={}, save_path
         tsne = TSNE(**tsne_params)
         comp1, comp2 = tsne.fit_transform(scaled_embed).T
 
-    genres = list(set(labels))
-    genres = sorted(genres, key=lambda g: GENRE_ORDER.index(label_dict[g]))
+    unique_labels = list(set(labels))
+
+    if label_order is not None:
+        unique_labels = sorted(unique_labels, key=lambda l: label_order.index(label_dict[l]))
     #genre->indices of that genre (so for loop will change colors)
-    g_dict = {i:np.array([j for j in range(len(labels)) if labels[j] == i]) for i in genres}
+    l_dict = {i:np.array([j for j in range(len(labels)) if labels[j] == i]) for i in unique_labels}
     for i in range(N):
-        g = genres[i]
-        if N > 10:
-            color = colors[i]
-        else:
-            color = None
-            
+        l = unique_labels[i]
+        color = colors[i]
+
         #just use the labels of g as the labels
-        plt.scatter(comp1[g_dict[g]], comp2[g_dict[g]],
-                    color=color, label='{i}'.format(i=label_dict[g]), alpha=0.7)
+        plt.scatter(comp1[l_dict[l]], comp2[l_dict[l]],
+                    color=color, label=label_dict[l], alpha=alpha)
 
     plt.title(title)
     if legend:
-        if N < 10:
-            lgd = plt.legend(loc='best')
-        else:
+        if N >= 10 or legend_outside:
             lgd = plt.legend(bbox_to_anchor=(1.01, 1), loc='upper left')
+        else:
+            lgd = plt.legend(loc='best')
     if save_path != None:
         plt.savefig(save_path, bbox_extra_artists=(lgd,), bbox_inches='tight')
-#     plt.show()
+

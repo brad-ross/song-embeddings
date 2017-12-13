@@ -19,4 +19,4 @@ if __name__ == '__main__':
     #     log('Now scraping 1000 songs for genre: {}'.format(genre))
     #     scraper.download_raw_previews_for_genre(genre)
     
-    scraper.download_raw_previews_for_artist('Coldplay')
+    scraper.download_raw_previews_for_artist('Billy Joel')
