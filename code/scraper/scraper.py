@@ -4,7 +4,7 @@ from .spotify import Client
 from ..data.db import get_session
 from multiprocessing import Pool, Value
 from ..data.models import Track, Playlist, Album, Artist, Genre
-#from ..data.cloud_storage import save_raw_preview_to_cloud
+from ..data.cloud_storage import save_raw_preview_to_cloud
 from sqlalchemy import and_
 from sqlalchemy.sql.expression import func
 
@@ -502,10 +502,11 @@ class Scraper(object):
             album_tracks_url = base_url + '/albums/{id}/tracks'.format(id=album[0])
             album_tracks_res = self.__client.request(album_tracks_url, {'country': default_country})
             for track in album_tracks_res['items']:
-                tracks_for_artist.append((artist.name, track['id'], track['name'], album[1], track['preview_url']))
+                if track['preview_url']:
+                    tracks_for_artist.append((artist.name, track['id'], track['name'], album[1], track['preview_url']))
 
         log('{} previews to download'.format(len(tracks_for_artist)))   
         
         self.__parallel_map(save_raw_preview_to_bucket, 
-                            [('_'.join(track[:4]), track[4], 'song-embeddings-artist-experiments-previews') \
+                            [('_'.join(track[:4]).replace('/', ';'), track[4], 'song-embeddings-artist-experiments-previews') \
                             for track in tracks_for_artist])
