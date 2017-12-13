@@ -4,7 +4,7 @@ from .spotify import Client
 from ..data.db import get_session
 from multiprocessing import Pool, Value
 from ..data.models import Track, Playlist, Album, Artist, Genre
-from ..data.cloud_storage import save_raw_preview_to_cloud
+#from ..data.cloud_storage import save_raw_preview_to_cloud
 from sqlalchemy import and_
 from sqlalchemy.sql.expression import func
 
@@ -157,7 +157,10 @@ def get_genres_from_object(object):
 
     return object.id, object_res['genres']
 
-def save_raw_preview_to_bucket(args_tuple):
+def get_tracks_from_album(album_id):
+    pass
+
+def save_raw_preview_to_bucket_genre(args_tuple):
     track, genre, bucket = args_tuple 
     raw_track = client.get_raw_preview(track.preview_url, delay=rate_limit_delay)
     save_raw_preview_to_cloud(raw_track, '{genre}_{id}'.format(genre=genre, id=track.id), bucket)
@@ -165,6 +168,16 @@ def save_raw_preview_to_bucket(args_tuple):
     progress_counter.value += 1
 
     if progress_counter.value > 0 and progress_counter.value % 200 == 0:
+        log('{0} raw previews saved'.format(progress_counter.value))
+
+def save_raw_preview_to_bucket(args_tuple):
+    filename, preview_url, bucket = args_tuple 
+    raw_track = client.get_raw_preview(preview_url, delay=rate_limit_delay)
+    save_raw_preview_to_cloud(raw_track, filename, bucket)
+
+    progress_counter.value += 1
+
+    if progress_counter.value > 0 and progress_counter.value % 50 == 0:
         log('{0} raw previews saved'.format(progress_counter.value))
 
 class Scraper(object):
@@ -472,6 +485,27 @@ class Scraper(object):
                             .filter(and_(Genre.name==genre, Track.preview_url != None)) \
                             .order_by(func.random()).limit(1000).all()
 
-	log('{} previews to download'.format(len(tracks_from_db)))	
+        log('{} previews to download'.format(len(tracks_from_db)))	
 	
-	self.__parallel_map(save_raw_preview_to_bucket, [(track, genre, 'song-embeddings-raw-previews') for track in tracks_from_db])
+        self.__parallel_map(save_raw_preview_to_bucket, [(track, genre, 'song-embeddings-raw-previews') for track in tracks_from_db])
+
+    def download_raw_previews_for_artist(self, artist_name):
+        artist = self.__db.query(Artist).filter(Artist.name==artist_name).first()
+        
+        albums_url = base_url + '/artists/{id}/albums'.format(id=artist.id)
+        albums_res = self.__client.request(albums_url, {'country': default_country})
+        artist_albums = [(album['id'], album['name']) \
+                for album in albums_res['items']]
+
+        tracks_for_artist = []
+        for album in artist_albums:
+            album_tracks_url = base_url + '/albums/{id}/tracks'.format(id=album[0])
+            album_tracks_res = self.__client.request(album_tracks_url, {'country': default_country})
+            for track in album_tracks_res['items']:
+                tracks_for_artist.append((artist.name, track['id'], track['name'], album[1], track['preview_url']))
+
+        log('{} previews to download'.format(len(tracks_for_artist)))   
+        
+        self.__parallel_map(save_raw_preview_to_bucket, 
+                            [('_'.join(track[:4]), track[4], 'song-embeddings-artist-experiments-previews') \
+                            for track in tracks_for_artist])

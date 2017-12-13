@@ -1,4 +1,4 @@
-from scraper import Scraper
+from .scraper import Scraper
 from time import time
 from ..utils import log
 
@@ -15,6 +15,8 @@ if __name__ == '__main__':
     # scraper.build_related_artists_graph()
     # scraper.get_genres()
     
-    for genre in genres_to_scrape:
-        log('Now scraping 1000 songs for genre: {}'.format(genre))
-        scraper.download_raw_previews_for_genre(genre)
+    # for genre in genres_to_scrape:
+    #     log('Now scraping 1000 songs for genre: {}'.format(genre))
+    #     scraper.download_raw_previews_for_genre(genre)
+    
+    scraper.download_raw_previews_for_artist('Coldplay')
